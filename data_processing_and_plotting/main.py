@@ -1,37 +1,30 @@
-from data_preprocessing import load_data, preprocess_data
-from model_training import prepare_features_and_target, split_data, train_models
-from stacking import generate_stacking_features, stack_and_evaluate
-from shap_analysis import shap_analysis
-from sklearn.linear_model import Ridge
+import warnings
+warnings.filterwarnings("ignore")
 
-def main():
-    # 第一步：数据加载和预处理
-    data = load_data('file1.csv')  # 加载数据
-    data = preprocess_data(data)   # 进行数据预处理
+from data_preprocessing import load_and_prepare_data
+from model_training import train_base_models
+from stacking import train_stacking_model
+from shap_analysis import shap_analysis_base_models, shap_analysis_stacking
+from plotting import plot_model_results  # 如果你有画误差图或比较图
 
-    # 第二步：特征和目标变量准备
-    X, y = prepare_features_and_target(data)  # 提取特征和目标变量
+# ======================= 1. 加载与预处理数据 =======================
+data_path = "final_merged_with_data.csv"
+X_train, X_test, y_train, y_test, X_train_full, X_test_full, X_all, y_all, stratify_labels = load_and_prepare_data(data_path)
 
-    # 第三步：数据划分
-    X_train, X_test, y_train, y_test = split_data(X, y)  # 分割数据集为训练集和测试集
+# ======================= 2. 训练基模型并返回模型集合 =======================
+final_models, test_metrics = train_base_models(X_train, X_test, y_train, y_test)
 
-    # 第四步：训练模型
-    best_model = train_models(X_train, y_train)  # 使用训练集训练最佳模型
+# ======================= 3. 堆叠集成模型训练（返回元模型）=======================
+stack_models, meta_model, X_train_stack, X_test_stack = train_stacking_model(final_models, X_train_full, X_test_full, y_train, y_test)
 
-    # 第五步：模型堆叠特征生成
-    models = {'RandomForest': best_model}  # 你可以在此处添加更多模型进行堆叠
-    X_train_stacking = generate_stacking_features(X_train, y_train, models)  # 生成训练集堆叠特征
-    X_test_stacking = generate_stacking_features(X_test, y_test, models)    # 生成测试集堆叠特征
+# ======================= 4. SHAP 分析（基模型 + 元模型）=======================
+print("\n🔍 开始基模型 SHAP 分析...")
+shap_analysis_base_models(final_models, X_train, X_test, X_all)
 
-    # 第六步：堆叠集成模型训练与评估
-    meta_model = Ridge()  # 可以替换为其他元模型
-    rmse, r2 = stack_and_evaluate(X_train_stacking, y_train, X_test_stacking, y_test, meta_model)
+print("\n🔍 开始堆叠模型 SHAP 分析...")
+shap_analysis_stacking("ElasticNet_best_meta_model.joblib", X_train_stack, X_test_stack, stack_models)
 
-    # 打印堆叠集成模型的评估结果
-    print(f"Stacked Model RMSE: {rmse:.4f}, R²: {r2:.4f}")
+# ======================= 5. 结果可视化（可选）=======================
+plot_model_results(test_metrics)  # 比较不同模型 R²/MAE/MSE，可选模块
 
-    # 第七步：SHAP分析
-    shap_analysis(best_model, X_train, X_test)  # 对最佳模型进行SHAP分析
-
-if __name__ == "__main__":
-    main()
+print("\n✅ 所有流程执行完毕。")
