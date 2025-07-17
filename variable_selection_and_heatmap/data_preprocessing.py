@@ -1,18 +1,19 @@
-import numpy as np
 import pandas as pd
+import numpy as np
 
-def load_data(data_path, importance_path):
+def load_data(file_path):
     """
-    加载数据和特征重要性文件
+    加载 CSV 文件为 DataFrame
     """
-    data = pd.read_csv(data_path)
-    feature_importance_df = pd.read_csv(importance_path)
-    return data, feature_importance_df
+    return pd.read_csv(file_path)
 
 def preprocess_data(data):
     """
-    数据预处理：删除包含缺失值或无穷大值的行
+    清洗数据：转换为数值型，处理缺失值
     """
-    data = data.replace([np.inf, -np.inf], np.nan)
-    data = data.dropna()
-    return data
+    data = data.drop(columns=[
+        'station', 'GDP', 'X_Lon', 'Y_Lat', 'station_lon', 'station_lat',
+        'GridID', "Interpolation_Status", "DATE", "Year_Month"
+    ], errors='ignore')
+    data = data.apply(pd.to_numeric, errors='coerce')
+    return data.fillna(data.mean())
