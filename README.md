@@ -36,7 +36,6 @@ This project consists of two complementary modules:
 |-------------|-------------|
 | `variable_selection_and_heatmap/` | Feature importance assessment, heatmap plotting, and model-based ranking |
 | `data_processing_and_plotting/`   | Pollution regression estimation, SHAP explainability, and mapping outputs |
-| `main.py`                         | Serves as the orchestrator for each pipeline |
 
 ---
 
@@ -48,7 +47,7 @@ cd variable_selection_and_heatmap
 python main.py
 
 # Step 2: Model training, SHAP analysis, and map visualization
-cd ../data_processing_and_plotting
+cd data_processing_and_plotting
 python main.py
 ```
 
