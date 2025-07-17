@@ -12,10 +12,21 @@ def prepare_features_and_target(data):
     return X, y
 
 # 数据划分
-def split_data(X, y):
-    # 按季度进行分层抽样，并划分训练集和测试集
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-    return X_train, X_test, y_train, y_test
+def split_data(X, y, stratify_col, test_size=0.2, random_state=42):
+    """
+    支持按季度或其他分层变量进行训练集/测试集划分。
+    
+    参数：
+        X: 特征
+        y: 目标变量
+        stratify_col: 分层依据列（例如 data['Quarter']）
+        test_size: 测试集比例
+        random_state: 随机种子
+    返回：
+        X_train, X_test, y_train, y_test
+    """
+    from sklearn.model_selection import train_test_split
+    return train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=stratify_col)
 
 # 模型训练与调优
 def train_models(X_train, y_train):
